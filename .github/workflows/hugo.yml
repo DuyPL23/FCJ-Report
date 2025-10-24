@@ -1,31 +1,43 @@
-name: Deploy Hugo site to GitHub Pages (branch mode)
+name: Deploy Hugo site to GitHub Pages
 
 on:
   push:
     branches:
-      - main  # Only rebuild when you push to main
+      - main  # Build whenever you push to main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
-  build-deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Install Hugo
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: 'latest'
 
+      # 3. Build the Hugo site
       - name: Build Hugo site
         run: hugo --minify
 
-      # Deploy the ./public directory to gh-pages branch
-      - name: Deploy to gh-pages
+      # 4. Deploy to gh-pages branch
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
           publish_branch: gh-pages
-          cname: '' # optional: put your custom domain here if you have one
+          cname: '' # optional for custom domain
